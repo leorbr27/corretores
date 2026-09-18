@@ -87,15 +87,14 @@ button:disabled{opacity:.55;cursor:not-allowed}.error{display:none;background:#f
 </div></div>
 <div class="field"><label>Tem algo indispensável que devemos mostrar?</label><textarea id="indispensavel" placeholder="Opcional"></textarea></div>
 <div class="actions"><button type="button" class="back" onclick="prevStep()">Voltar</button><button type="submit" class="submit" id="submit">ENVIAR BRIEFING</button></div>
-<div class="error" id="error">O formulário está pronto, mas o envio ainda precisa ser conectado ao banco de dados. Estamos finalizando essa parte.</div>
+<div class="error" id="error">Não foi possível abrir o WhatsApp. Verifique se o WhatsApp está instalado ou tente novamente.</div>
 </section>
 </form>
-<div class="success" id="success"><div style="font-size:42px">✓</div><h2>Briefing recebido!</h2><p>Recebemos as informações do imóvel. Agora podemos seguir para o agendamento da visita técnica.</p></div>
+<div class="success" id="success"><div style="font-size:42px">✓</div><h2>Briefing preparado!</h2><p>O WhatsApp foi aberto com todas as informações preenchidas. Basta tocar em <strong>Enviar</strong> para encaminhar o briefing à Drone VIXX.</p></div>
 </div>
 <p class="small-note">Drone VIXX • Filmagem aérea e produção de vídeos</p>
 </div>
 <script>
-const API_URL="https://ep-falling-frost-ac6kshzo.apirest.sa-east-1.aws.neon.tech/corretores/rest/v1/briefings_corretor";
 let current=0;const steps=[...document.querySelectorAll(".step")];
 function update(){steps.forEach((s,i)=>s.classList.toggle("active",i===current));document.getElementById("progress").style.width=((current+1)/steps.length*100)+"%";window.scrollTo({top:0,behavior:"smooth"})}
 function validateStep(){const fields=steps[current].querySelectorAll("input[required],select[required],textarea[required]");for(const f of fields){if(!f.checkValidity()){f.reportValidity();return false}}return true}
@@ -104,44 +103,55 @@ function prevStep(){if(current>0){current--;update()}}
 function checked(prefix){return [...document.querySelectorAll(`input[id^="${prefix}"]`)].filter(i=>i.checked).map(i=>i.value)}
 document.getElementById("whatsapp").addEventListener("input",e=>{let v=e.target.value.replace(/\D/g,"").slice(0,11);if(v.length>10)v=v.replace(/(\d{2})(\d{5})(\d{4})/,"($1) $2-$3");else if(v.length>6)v=v.replace(/(\d{2})(\d{4})(\d{0,4})/,"($1) $2-$3");else if(v.length>2)v=v.replace(/(\d{2})(\d{0,5})/,"($1) $2");e.target.value=v});
 document.getElementById("valor").addEventListener("input",e=>{let n=e.target.value.replace(/\D/g,"");if(!n){e.target.value="";return}n=String(parseInt(n,10));e.target.value="R$ "+n.replace(/\B(?=(\d{3})+(?!\d))/g,".")});
-document.getElementById("form").addEventListener("submit",async e=>{
+document.getElementById("form").addEventListener("submit",e=>{
  e.preventDefault();
  const btn=document.getElementById("submit"),err=document.getElementById("error");
- err.style.display="none";btn.disabled=true;btn.textContent="ENVIANDO...";
- const valor=document.getElementById("valor").value.replace(/\D/g,"");
- const data={
-  nome_corretor:document.getElementById("nome").value.trim(),
-  whatsapp:document.getElementById("whatsapp").value.trim(),
-  creci:document.getElementById("creci").value.trim()||null,
-  tipo_imovel:document.getElementById("tipo").value,
-  endereco:document.getElementById("endereco").value.trim(),
-  bairro:document.getElementById("bairro").value.trim()||null,
-  cidade:document.getElementById("cidade").value.trim(),
-  valor_venda:valor?parseInt(valor,10):null,
-  respostas:{
-   area:document.getElementById("area").value.trim()||null,
-   quartos:document.getElementById("quartos").value.trim()||null,
-   suites:document.getElementById("suites").value.trim()||null,
-   banheiros:document.getElementById("banheiros").value.trim()||null,
-   vagas:document.getElementById("vagas").value.trim()||null,
-   diferenciais:document.getElementById("diferenciais").value.trim()||null,
-   mostrar:checked("show_"),
-   referencia:document.getElementById("referencia").value.trim()||null,
-   restricoes:document.getElementById("restricoes").value.trim()||null,
-   objetivo_video:checked("obj_"),
-   indispensavel:document.getElementById("indispensavel").value.trim()||null
-  },
-  user_agent:navigator.userAgent
- };
+ err.style.display="none";btn.disabled=true;btn.textContent="ABRINDO WHATSAPP...";
+ const valor=document.getElementById("valor").value.trim()||"Não informado";
+ const mostrar=checked("show_");
+ const objetivos=checked("obj_");
+ const texto=[
+  "BRIEFING PRÉ-VISITA TÉCNICA — DRONE VIXX",
+  "",
+  "DADOS DO CORRETOR",
+  "Nome: "+document.getElementById("nome").value.trim(),
+  "WhatsApp: "+document.getElementById("whatsapp").value.trim(),
+  "CRECI: "+(document.getElementById("creci").value.trim()||"Não informado"),
+  "",
+  "IMÓVEL",
+  "Tipo: "+document.getElementById("tipo").value,
+  "Endereço: "+document.getElementById("endereco").value.trim(),
+  "Bairro: "+(document.getElementById("bairro").value.trim()||"Não informado"),
+  "Cidade: "+document.getElementById("cidade").value.trim(),
+  "Valor de venda: "+valor,
+  "Área aproximada: "+(document.getElementById("area").value.trim()||"Não informada"),
+  "",
+  "CARACTERÍSTICAS",
+  "Quartos: "+(document.getElementById("quartos").value.trim()||"Não informado"),
+  "Suítes: "+(document.getElementById("suites").value.trim()||"Não informado"),
+  "Banheiros: "+(document.getElementById("banheiros").value.trim()||"Não informado"),
+  "Vagas: "+(document.getElementById("vagas").value.trim()||"Não informado"),
+  "Diferenciais: "+(document.getElementById("diferenciais").value.trim()||"Não informado"),
+  "",
+  "O QUE DEVEMOS MOSTRAR",
+  "Itens: "+(mostrar.length?mostrar.join(", "):"Não informado"),
+  "Ponto de referência: "+(document.getElementById("referencia").value.trim()||"Não informado"),
+  "",
+  "DRONE E VÍDEO",
+  "Restrições para voo/gravação: "+(document.getElementById("restricoes").value.trim()||"Nenhuma informada"),
+  "Objetivo do vídeo: "+(objetivos.length?objetivos.join(", "):"Não informado"),
+  "Indispensável mostrar: "+(document.getElementById("indispensavel").value.trim()||"Não informado")
+ ].join("\n");
+ const url="https://wa.me/5527999441733?text="+encodeURIComponent(texto);
  try{
-  const response=await fetch(API_URL,{method:"POST",headers:{"Content-Type":"application/json","Accept":"application/json"},body:JSON.stringify(data)});
-  if(!response.ok){const detail=await response.text();throw new Error("HTTP "+response.status+" "+detail)}
-  document.getElementById("form").style.display="none";
-  document.getElementById("progress").style.display="none";
-  document.getElementById("success").style.display="block";
+  window.location.href=url;
+  setTimeout(()=>{
+   document.getElementById("form").style.display="none";
+   document.getElementById("progress").style.display="none";
+   document.getElementById("success").style.display="block";
+  },700);
  }catch(ex){
-  console.error("Falha ao enviar briefing:",ex);
-  err.textContent="Não foi possível enviar agora. Verifique sua conexão e tente novamente.";
+  console.error("Falha ao abrir WhatsApp:",ex);
   err.style.display="block";
   btn.disabled=false;btn.textContent="ENVIAR BRIEFING";
  }
