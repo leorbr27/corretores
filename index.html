@@ -100,7 +100,8 @@ let current=0;const steps=[...document.querySelectorAll(".step")];
 function update(){steps.forEach((s,i)=>s.classList.toggle("active",i===current));document.getElementById("progress").style.width=((current+1)/steps.length*100)+"%";window.scrollTo({top:0,behavior:"smooth"})}
 function validateStep(){const fields=steps[current].querySelectorAll("input[required],select[required],textarea[required]");for(const f of fields){if(!f.checkValidity()){f.reportValidity();return false}}return true}
 function nextStep(){if(validateStep()&&current<steps.length-1){current++;update()}}
-function prevStep(){if(current>0){current--;update()}}\nfunction checked(prefix){return [...document.querySelectorAll(`input[id^="${prefix}"]`)].filter(i=>i.checked).map(i=>i.value)}
+function prevStep(){if(current>0){current--;update()}}
+function checked(prefix){return [...document.querySelectorAll(`input[id^="${prefix}"]`)].filter(i=>i.checked).map(i=>i.value)}
 document.getElementById("whatsapp").addEventListener("input",e=>{let v=e.target.value.replace(/\D/g,"").slice(0,11);if(v.length>10)v=v.replace(/(\d{2})(\d{5})(\d{4})/,"($1) $2-$3");else if(v.length>6)v=v.replace(/(\d{2})(\d{4})(\d{0,4})/,"($1) $2-$3");else if(v.length>2)v=v.replace(/(\d{2})(\d{0,5})/,"($1) $2");e.target.value=v});
 document.getElementById("valor").addEventListener("input",e=>{let n=e.target.value.replace(/\D/g,"");if(!n){e.target.value="";return}n=String(parseInt(n,10));e.target.value="R$ "+n.replace(/\B(?=(\d{3})+(?!\d))/g,".")});
 document.getElementById("form").addEventListener("submit",async e=>{
