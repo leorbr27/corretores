@@ -1,3 +1,109 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#132b55">
+<title>Drone VIXX | Briefing pré-visita técnica</title>
+<style>
+:root{--blue:#132b55;--pink:#d98aa4;--bg:#f5f6f8;--text:#172033;--muted:#687386;--line:#dfe3e9;--white:#fff}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;color:var(--text)}
+.container{width:min(680px,100%);margin:auto;padding:20px 16px 40px}header{text-align:center;padding:8px 0 18px}
+.logo{max-width:180px;max-height:75px;object-fit:contain}.logo-fallback{display:none;font-size:25px;font-weight:800;color:var(--blue)}
+h1{font-size:23px;margin:12px 0 5px;color:var(--blue)}.subtitle{margin:0;color:var(--muted);font-size:14px;line-height:1.45}
+.progress{height:6px;background:#e5e8ed;border-radius:20px;overflow:hidden;margin:8px 0 22px}.progress-bar{height:100%;width:20%;background:var(--pink);transition:width .25s}
+.card{background:#fff;border-radius:18px;padding:22px 18px;box-shadow:0 5px 24px rgba(20,35,60,.07)}
+.step{display:none}.step.active{display:block}.step-title{font-size:20px;font-weight:750;color:var(--blue);margin:0 0 6px}.step-help{font-size:13px;color:var(--muted);margin:0 0 18px;line-height:1.45}
+.field{margin:0 0 16px}label{display:block;font-size:14px;font-weight:650;margin:0 0 7px}.required{color:#b44;margin-left:2px}
+input,select,textarea{width:100%;border:1px solid var(--line);border-radius:11px;padding:13px 12px;font-size:16px;background:#fff;color:var(--text);outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--pink);box-shadow:0 0 0 3px rgba(217,138,164,.14)}textarea{min-height:105px;resize:vertical}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.options{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.option{position:relative}.option input{position:absolute;opacity:0;pointer-events:none}.option label{border:1px solid var(--line);border-radius:11px;padding:12px 11px;font-weight:500;background:#fff;margin:0;cursor:pointer;min-height:45px;display:flex;align-items:center}
+.option input:checked+label{border-color:var(--pink);background:#fff6f8}.actions{display:flex;gap:10px;margin-top:20px}
+button{border:0;border-radius:12px;padding:14px 18px;font-size:16px;font-weight:700;cursor:pointer}.next{background:var(--blue);color:#fff;flex:1}.back{background:#edf0f4;color:var(--blue)}.submit{background:var(--pink);color:#fff;width:100%}
+button:disabled{opacity:.55;cursor:not-allowed}.error{display:none;background:#fff0f0;color:#a33;border:1px solid #f0caca;padding:12px;border-radius:10px;font-size:13px;margin-top:14px}
+.success{display:none;text-align:center;padding:15px 4px}.success h2{color:var(--blue);font-size:24px;margin:8px 0}.success p{color:var(--muted);line-height:1.5}.small-note{text-align:center;font-size:11px;color:#8a93a2;margin-top:15px}
+@media(max-width:480px){.container{padding:14px 12px 30px}.card{padding:20px 15px}.grid,.options{grid-template-columns:1fr}.actions{position:sticky;bottom:8px;background:linear-gradient(transparent,#fff 25%);padding-top:12px}}
+</style>
+</head>
+<body>
+<div class="container">
+<header>
+<img class="logo" src="logo.jpg" alt="Drone VIXX" onerror="this.style.display='none';document.querySelector('.logo-fallback').style.display='block'">
+<div class="logo-fallback">DRONE VIXX</div>
+<h1>Briefing pré-visita técnica</h1>
+<p class="subtitle">Preencha antes de marcarmos a visita. Leva cerca de 2 minutos.</p>
+</header>
+<div class="progress"><div class="progress-bar" id="progress"></div></div>
+<div class="card">
+<form id="form">
+<section class="step active">
+<h2 class="step-title">1. Seus dados</h2><p class="step-help">Precisamos saber quem será nosso contato para este imóvel.</p>
+<div class="field"><label>Nome <span class="required">*</span></label><input id="nome" required autocomplete="name" placeholder="Seu nome"></div>
+<div class="field"><label>WhatsApp <span class="required">*</span></label><input id="whatsapp" required inputmode="tel" autocomplete="tel" placeholder="(27) 99999-9999"></div>
+<div class="field"><label>CRECI</label><input id="creci" placeholder="Opcional"></div>
+<div class="actions"><button type="button" class="next" onclick="nextStep()">Continuar</button></div>
+</section>
+<section class="step">
+<h2 class="step-title">2. O imóvel</h2><p class="step-help">Essas informações nos ajudam a entender o imóvel antes da visita.</p>
+<div class="field"><label>Tipo de imóvel <span class="required">*</span></label><select id="tipo" required><option value="">Selecione</option><option>Apartamento</option><option>Cobertura</option><option>Casa</option><option>Casa em condomínio</option><option>Terreno</option><option>Comercial</option><option>Outro</option></select></div>
+<div class="field"><label>Endereço completo <span class="required">*</span></label><input id="endereco" required autocomplete="street-address" placeholder="Rua, número e complemento"></div>
+<div class="grid"><div class="field"><label>Bairro</label><input id="bairro"></div><div class="field"><label>Cidade <span class="required">*</span></label><input id="cidade" required autocomplete="address-level2"></div></div>
+<div class="grid"><div class="field"><label>Valor de venda</label><input id="valor" inputmode="numeric" placeholder="R$ 0"></div><div class="field"><label>Área aproximada</label><input id="area" inputmode="decimal" placeholder="Ex.: 120 m²"></div></div>
+<div class="actions"><button type="button" class="back" onclick="prevStep()">Voltar</button><button type="button" class="next" onclick="nextStep()">Continuar</button></div>
+</section>
+<section class="step">
+<h2 class="step-title">3. Características</h2><p class="step-help">Não precisa informar tudo. Preencha apenas o que souber.</p>
+<div class="grid"><div class="field"><label>Quartos</label><input id="quartos" inputmode="numeric" placeholder="Ex.: 3"></div><div class="field"><label>Suítes</label><input id="suites" inputmode="numeric" placeholder="Ex.: 2"></div><div class="field"><label>Banheiros</label><input id="banheiros" inputmode="numeric" placeholder="Ex.: 3"></div><div class="field"><label>Vagas</label><input id="vagas" inputmode="numeric" placeholder="Ex.: 2"></div></div>
+<div class="field"><label>Principais diferenciais do imóvel</label><textarea id="diferenciais" placeholder="Ex.: vista para o mar, varanda ampla, área gourmet, acabamento..."></textarea></div>
+<div class="actions"><button type="button" class="back" onclick="prevStep()">Voltar</button><button type="button" class="next" onclick="nextStep()">Continuar</button></div>
+</section>
+<section class="step">
+<h2 class="step-title">4. O que devemos mostrar?</h2><p class="step-help">Marque tudo que for importante para a apresentação do imóvel.</p>
+<div class="options">
+<div class="option"><input type="checkbox" id="show_imovel" value="O imóvel"><label for="show_imovel">O imóvel</label></div>
+<div class="option"><input type="checkbox" id="show_vista" value="Vista"><label for="show_vista">Vista</label></div>
+<div class="option"><input type="checkbox" id="show_praia" value="Praia / mar"><label for="show_praia">Praia / mar</label></div>
+<div class="option"><input type="checkbox" id="show_condominio" value="Condomínio"><label for="show_condominio">Condomínio</label></div>
+<div class="option"><input type="checkbox" id="show_lazer" value="Área de lazer"><label for="show_lazer">Área de lazer</label></div>
+<div class="option"><input type="checkbox" id="show_localizacao" value="Localização"><label for="show_localizacao">Localização</label></div>
+<div class="option"><input type="checkbox" id="show_bairro" value="Bairro"><label for="show_bairro">Bairro</label></div>
+<div class="option"><input type="checkbox" id="show_comercio" value="Comércio próximo"><label for="show_comercio">Comércio próximo</label></div>
+<div class="option"><input type="checkbox" id="show_acessos" value="Vias de acesso"><label for="show_acessos">Vias de acesso</label></div>
+</div>
+<div class="field" style="margin-top:18px"><label>Ponto de referência importante</label><input id="referencia" placeholder="Ex.: praia, avenida, shopping, parque..."></div>
+<div class="actions"><button type="button" class="back" onclick="prevStep()">Voltar</button><button type="button" class="next" onclick="nextStep()">Continuar</button></div>
+</section>
+<section class="step">
+<h2 class="step-title">5. Drone e vídeo</h2><p class="step-help">Queremos evitar surpresas no dia da gravação.</p>
+<div class="field"><label>Existe alguma restrição para voo ou gravação?</label><textarea id="restricoes" placeholder="Ex.: não mostrar determinada área, vizinho, placa, interior de outro imóvel..."></textarea></div>
+<div class="field"><label>Objetivo do vídeo</label><div class="options">
+<div class="option"><input type="checkbox" id="obj_anuncio" value="Anúncio do imóvel"><label for="obj_anuncio">Anúncio do imóvel</label></div>
+<div class="option"><input type="checkbox" id="obj_reels" value="Instagram / Reels"><label for="obj_reels">Instagram / Reels</label></div>
+<div class="option"><input type="checkbox" id="obj_youtube" value="YouTube"><label for="obj_youtube">YouTube</label></div>
+<div class="option"><input type="checkbox" id="obj_patrocinado" value="Anúncio patrocinado"><label for="obj_patrocinado">Anúncio patrocinado</label></div>
+<div class="option"><input type="checkbox" id="obj_cliente" value="Enviar para cliente"><label for="obj_cliente">Enviar para cliente</label></div>
+<div class="option"><input type="checkbox" id="obj_outro" value="Outro"><label for="obj_outro">Outro</label></div>
+</div></div>
+<div class="field"><label>Tem algo indispensável que devemos mostrar?</label><textarea id="indispensavel" placeholder="Opcional"></textarea></div>
+<div class="actions"><button type="button" class="back" onclick="prevStep()">Voltar</button><button type="submit" class="submit" id="submit">ENVIAR BRIEFING</button></div>
+<div class="error" id="error">O formulário está pronto, mas o envio ainda precisa ser conectado ao banco de dados. Estamos finalizando essa parte.</div>
+</section>
+</form>
+<div class="success" id="success"><div style="font-size:42px">✓</div><h2>Briefing recebido!</h2><p>Recebemos as informações do imóvel. Agora podemos seguir para o agendamento da visita técnica.</p></div>
+</div>
+<p class="small-note">Drone VIXX • Filmagem aérea e produção de vídeos</p>
+</div>
+<script>
+let current=0;const steps=[...document.querySelectorAll(".step")];
+function update(){steps.forEach((s,i)=>s.classList.toggle("active",i===current));document.getElementById("progress").style.width=((current+1)/steps.length*100)+"%";window.scrollTo({top:0,behavior:"smooth"})}
+function validateStep(){const fields=steps[current].querySelectorAll("input[required],select[required],textarea[required]");for(const f of fields){if(!f.checkValidity()){f.reportValidity();return false}}return true}
+function nextStep(){if(validateStep()&&current<steps.length-1){current++;update()}}
+function prevStep(){if(current>0){current--;update()}}
+document.getElementById("whatsapp").addEventListener("input",e=>{let v=e.target.value.replace(/\D/g,"").slice(0,11);if(v.length>10)v=v.replace(/(\d{2})(\d{5})(\d{4})/,"($1) $2-$3");else if(v.length>6)v=v.replace(/(\d{2})(\d{4})(\d{0,4})/,"($1) $2-$3");else if(v.length>2)v=v.replace(/(\d{2})(\d{0,5})/,"($1) $2");e.target.value=v});
+document.getElementById("valor").addEventListener("input",e=>{let n=e.target.value.replace(/\D/g,"");if(!n){e.target.value="";return}n=String(parseInt(n,10));e.target.value="R$ "+n.replace(/\B(?=(\d{3})+(?!\d))/g,".")});
+document.getElementById("form").addEventListener("submit",e=>{e.preventDefault();document.getElementById("error").style.display="block"});
+update();
+</script>
+</body>
 </html>
