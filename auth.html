@@ -38,10 +38,18 @@ const password=document.getElementById("password");
 const enter=document.getElementById("enter");
 const error=document.getElementById("error");
 
+const SIGNUP_KEY="dronevixx_primeiro_acesso";
+const signupEnabled=()=>localStorage.getItem(SIGNUP_KEY)!=="disabled";
+
 const switcher=document.createElement("div");
 switcher.style.cssText="display:flex;gap:8px;margin:0 0 18px";
 switcher.innerHTML='<button type="button" id="signInTab" style="margin:0;background:#142b55">Entrar</button><button type="button" id="signUpTab" style="margin:0;background:#eef2f7;color:#142b55">Primeiro acesso</button>';
 enter.parentElement.insertBefore(switcher,enter);
+const signUpTab=document.getElementById("signUpTab");
+if(!signupEnabled()){
+  signUpTab.remove();
+}
+
 const nameWrap=document.createElement("div");
 nameWrap.style.display="none";
 nameWrap.innerHTML='<label for="name" style="margin-top:14px">Nome</label><input id="name" autocomplete="name" placeholder="Seu nome">';
@@ -50,6 +58,10 @@ password.parentElement.parentElement.insertBefore(nameWrap,password.parentElemen
 let mode="signin";
 
 function setMode(next){
+  if(next==="signup" && !signupEnabled()){
+    mode="signin";
+    next="signin";
+  }
   mode=next;
   const signIn=mode==="signin";
   title.textContent=signIn?"Acesso administrativo":"Criar acesso administrativo";
