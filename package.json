@@ -1,0 +1,8 @@
+{
+  "name": "corretores-neon-backend",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@neondatabase/config": "latest"
+  }
+}
