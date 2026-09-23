@@ -28,11 +28,89 @@ button{width:100%;border:0;border-radius:12px;padding:14px;margin-top:14px;backg
 <div id="error" class="error">Senha incorreta. Tente novamente.</div>
 <p class="note">A autenticação acontece em uma página separada e não é apresentada no formulário enviado aos corretores.</p>
 </div></div>
-<script>
-const PASSWORD_HASH='b275c12438c3eb118b307ed62dd17aaa163ff15f56a622b090e2a1d91320a634';
-async function sha256(text){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(text));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')}
-async function login(){const btn=document.getElementById('enter'),err=document.getElementById('error');btn.disabled=true;const h=await sha256(document.getElementById('password').value);if(h!==PASSWORD_HASH){err.style.display='block';btn.disabled=false;return}sessionStorage.setItem('vixx_admin','1');location.href='admin.html'}
-document.getElementById('password').addEventListener('keydown',e=>{if(e.key==='Enter')login()});
-if(sessionStorage.getItem('vixx_admin')==='1')location.replace('admin.html');
+<script type="module">
+import { neon } from "./neon-client.js";
+
+const title=document.querySelector("h1");
+const sub=document.querySelector(".sub");
+const label=document.querySelector("label[for=password]");
+const password=document.getElementById("password");
+const enter=document.getElementById("enter");
+const error=document.getElementById("error");
+
+const switcher=document.createElement("div");
+switcher.style.cssText="display:flex;gap:8px;margin:0 0 18px";
+switcher.innerHTML='<button type="button" id="signInTab" style="margin:0;background:#142b55">Entrar</button><button type="button" id="signUpTab" style="margin:0;background:#eef2f7;color:#142b55">Primeiro acesso</button>';
+enter.parentElement.insertBefore(switcher,enter);
+const nameWrap=document.createElement("div");
+nameWrap.style.display="none";
+nameWrap.innerHTML='<label for="name" style="margin-top:14px">Nome</label><input id="name" autocomplete="name" placeholder="Seu nome">';
+password.parentElement.parentElement.insertBefore(nameWrap,password.parentElement);
+
+let mode="signin";
+
+function setMode(next){
+  mode=next;
+  const signIn=mode==="signin";
+  title.textContent=signIn?"Acesso administrativo":"Criar acesso administrativo";
+  sub.textContent=signIn?"Entre com sua conta do Neon Auth para acessar os briefings.":"Crie a conta administrativa que será usada para entrar nesta área.";
+  label.textContent="E-mail";
+  label.setAttribute("for","email");
+  let email=document.getElementById("email");
+  if(!email){
+    email=document.createElement("input");
+    email.id="email";email.type="email";email.autocomplete="username";email.placeholder="seu@email.com";
+    password.parentElement.replaceChild(email,password);
+  }
+  let p=document.getElementById("password");
+  if(!p){
+    const pw=document.createElement("input");
+    pw.id="password";pw.type="password";pw.autocomplete=signIn?"current-password":"new-password";pw.placeholder=signIn?"Sua senha":"Crie uma senha";
+    document.getElementById("email").parentElement.insertBefore(pw,document.getElementById("email").nextSibling);
+  }else p.autocomplete=signIn?"current-password":"new-password";
+  nameWrap.style.display=signIn?"none":"block";
+  enter.textContent=signIn?"Entrar na área administrativa":"Criar acesso";
+  document.getElementById("signInTab").style.background=signIn?"#142b55":"#eef2f7";
+  document.getElementById("signInTab").style.color=signIn?"#fff":"#142b55";
+  document.getElementById("signUpTab").style.background=signIn?"#eef2f7":"#142b55";
+  document.getElementById("signUpTab").style.color=signIn?"#142b55":"#fff";
+  error.style.display="none";
+}
+function currentEmail(){return document.getElementById("email").value.trim()}
+function currentPassword(){return document.getElementById("password").value}
+
+async function submitAuth(){
+  enter.disabled=true;error.style.display="none";enter.textContent=mode==="signin"?"Entrando...":"Criando...";
+  try{
+    if(!currentEmail()||!currentPassword()) throw new Error("Informe e-mail e senha.");
+    let result;
+    if(mode==="signin"){
+      result=await neon.auth.signIn.email({email:currentEmail(),password:currentPassword()});
+    }else{
+      const name=(document.getElementById("name").value||"Administrador").trim();
+      result=await neon.auth.signUp.email({email:currentEmail(),password:currentPassword(),name});
+    }
+    if(result?.error) throw new Error(result.error.message||"Não foi possível autenticar.");
+    location.replace("admin.html");
+  }catch(ex){
+    console.error(ex);
+    error.textContent=ex.message||"Não foi possível concluir a autenticação.";
+    error.style.display="block";
+    enter.disabled=false;
+    enter.textContent=mode==="signin"?"Entrar na área administrativa":"Criar acesso";
+  }
+}
+document.getElementById("signInTab").onclick=()=>setMode("signin");
+document.getElementById("signUpTab").onclick=()=>setMode("signup");
+enter.onclick=submitAuth;
+document.addEventListener("keydown",e=>{if(e.key==="Enter")submitAuth()});
+
+(async()=>{
+  try{
+    const {data}=await neon.auth.getSession();
+    if(data?.user) location.replace("admin.html");
+  }catch{}
+  setMode("signin");
+})();
 </script>
 </body></html>
