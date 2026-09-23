@@ -38,7 +38,7 @@ const password=document.getElementById("password");
 const enter=document.getElementById("enter");
 const error=document.getElementById("error");
 
-const SIGNUP_KEY="dronevixx_primeiro_acesso";
+const SIGNUP_KEY="dronevixx_primeiro_acesso_v2";
 const signupEnabled=()=>localStorage.getItem(SIGNUP_KEY)!=="disabled";
 
 const switcher=document.createElement("div");
@@ -47,7 +47,7 @@ switcher.innerHTML='<button type="button" id="signInTab" style="margin:0;backgro
 enter.parentElement.insertBefore(switcher,enter);
 const signUpTab=document.getElementById("signUpTab");
 if(!signupEnabled()){
-  signUpTab.remove();
+  signUpTab.style.display="none";
 }
 
 const nameWrap=document.createElement("div");
@@ -81,11 +81,14 @@ function setMode(next){
     document.getElementById("email").parentElement.insertBefore(pw,document.getElementById("email").nextSibling);
   }else p.autocomplete=signIn?"current-password":"new-password";
   nameWrap.style.display=signIn?"none":"block";
-  enter.textContent=signIn?"Entrar na área administrativa":"Criar acesso";
+  enter.textContent=signIn?"Entrar":"Criar acesso";
   document.getElementById("signInTab").style.background=signIn?"#142b55":"#eef2f7";
   document.getElementById("signInTab").style.color=signIn?"#fff":"#142b55";
-  document.getElementById("signUpTab").style.background=signIn?"#eef2f7":"#142b55";
-  document.getElementById("signUpTab").style.color=signIn?"#142b55":"#fff";
+  const signUp=document.getElementById("signUpTab");
+  if(signUp){
+    signUp.style.background=signIn?"#eef2f7":"#142b55";
+    signUp.style.color=signIn?"#142b55":"#fff";
+  }
   error.style.display="none";
 }
 function currentEmail(){return document.getElementById("email").value.trim()}
@@ -109,11 +112,12 @@ async function submitAuth(){
     error.textContent=ex.message||"Não foi possível concluir a autenticação.";
     error.style.display="block";
     enter.disabled=false;
-    enter.textContent=mode==="signin"?"Entrar na área administrativa":"Criar acesso";
+    enter.textContent=mode==="signin"?"Entrar":"Criar acesso";
   }
 }
 document.getElementById("signInTab").onclick=()=>setMode("signin");
-document.getElementById("signUpTab").onclick=()=>setMode("signup");
+const signUpTabButton=document.getElementById("signUpTab");
+if(signUpTabButton) signUpTabButton.onclick=()=>setMode("signup");
 enter.onclick=submitAuth;
 document.addEventListener("keydown",e=>{if(e.key==="Enter")submitAuth()});
 
