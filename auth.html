@@ -116,7 +116,7 @@ async function submitAuth(){
     enter.textContent=mode==="signin"?"Entrar":"Criar acesso";
   }
 }
-document.getElementById("signInTab").onclick=()=>setMode("signin");
+document.getElementById("signInTab").onclick=submitAuth;
 const signUpTabButton=document.getElementById("signUpTab");
 if(signUpTabButton) signUpTabButton.onclick=()=>setMode("signup");
 enter.onclick=submitAuth;
