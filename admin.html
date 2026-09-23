@@ -24,31 +24,26 @@ button{border:0;border-radius:11px;padding:12px 16px;font:inherit;font-weight:75
 </head>
 <body>
 <div class="container">
-  <div id="loginView" class="card login">
-    <h1>Área administrativa</h1><p class="sub">Drone VIXX • Briefings de corretores</p>
-    <div class="field"><label>Senha</label><input id="password" type="password" autocomplete="current-password" placeholder="Digite a senha"></div>
-    <button class="primary" style="width:100%;margin-top:14px" onclick="login()">Entrar</button>
-    <div id="loginError" class="error" style="display:none">Senha incorreta.</div>
-    <p class="small">Acesso destinado à administração dos briefings.</p>
-  </div>
-
-  <main id="adminView" style="display:none">
+  <main id="adminView">
     <div class="top">
       <div class="brand">
         <img src="logo.jpg" alt="Drone VIXX" onerror="this.style.display='none'">
         <div><strong>Área administrativa</strong><span>Briefings recebidos</span></div>
       </div>
-      <div style="display:flex;gap:8px"><a class="light" href="index.html" style="text-decoration:none;display:inline-flex;align-items:center">Página pública</a><button class="light" onclick="logout()">Sair</button></div>
+      <div style="display:flex;gap:8px">
+        <a class="light" href="index.html" style="text-decoration:none;display:inline-flex;align-items:center">Página pública</a>
+        <button class="light" onclick="logout()">Sair</button>
+      </div>
     </div>
     <div class="card">
       <h1>Briefings</h1><p class="sub">Consulte, pesquise, edite ou exclua os dados gravados no Neon.</p>
+      <div id="sessionUser" class="small" style="text-align:left;margin-top:8px"></div>
       <div class="toolbar" style="margin-top:18px"><input id="search" placeholder="Pesquisar por nome, cidade, CRECI ou endereço" oninput="render()"><button class="primary" onclick="load()">Atualizar</button><button class="pink" onclick="exportCSV()">Exportar CSV</button></div>
       <div id="stats" class="stats"></div>
       <div id="message"></div>
       <div id="list" class="list"><div class="empty">Carregando...</div></div>
     </div>
-  </main>
-</div>
+  </main></div>
 
 <div id="modal" class="modal">
  <div class="modal-box">
@@ -65,49 +60,118 @@ button{border:0;border-radius:11px;padding:12px 16px;font:inherit;font-weight:75
  </div>
 </div>
 
-<script>
-const API='https://ep-falling-frost-ac6kshzo.apirest.sa-east-1.aws.neon.tech/corretores/rest/v1/briefings_corretor';
-function showAdmin(){document.getElementById('adminView').style.display='block'}
-function logout(){sessionStorage.removeItem('vixx_admin');location.replace('auth.html')}
-if(sessionStorage.getItem('vixx_admin')!=='1'){location.replace('auth.html');}else{showAdmin();load();}
+<script type="module">
+import { neon, requireAdminSession } from "./neon-client.js";
 
 let rows=[],editingId=null;
 
+function logout(){neon.auth.signOut().finally(()=>location.replace("auth.html"))}
+window.logout=logout;
+
+async function boot(){
+  try{
+    const session=await requireAdminSession();
+    const user=session.user;
+    document.getElementById("sessionUser").textContent="Conectado como "+(user.name||user.email||"administrador");
+    await load();
+  }catch(e){
+    console.error(e);
+  }
+}
 
 async function load(){
- const list=document.getElementById('list');list.innerHTML='<div class="empty">Carregando briefings...</div>';document.getElementById('message').innerHTML='';
- try{
-  const r=await fetch(API+'?select=*&order=id.desc',{headers:{'Accept':'application/json'}});
-  if(!r.ok)throw new Error('HTTP '+r.status);
-  rows=await r.json();render();
- }catch(e){list.innerHTML='<div class="error">Não foi possível consultar os briefings no Neon. Verifique as permissões da API. Código: '+e.message+'</div>'}
+  const list=document.getElementById("list");
+  list.innerHTML='<div class="empty">Carregando briefings...</div>';
+  document.getElementById("message").innerHTML="";
+  try{
+    const {data,error}=await neon.from("briefings_corretor").select("*").order("id",{ascending:false});
+    if(error)throw new Error(error.message||"Erro ao consultar");
+    rows=data||[];render();
+  }catch(e){
+    list.innerHTML='<div class="error">Não foi possível consultar os briefings no Neon. Verifique as permissões/RLS do Data API. Código: '+escapeHtml(e.message)+'</div>';
+  }
 }
-function text(v){return v===null||v===undefined||v===''?'—':String(v)}
-function formatDate(v){if(!v)return 'Data não informada';const d=new Date(v);return isNaN(d)?v:d.toLocaleString('pt-BR')}
+window.load=load;
+
+function text(v){return v===null||v===undefined||v===""?"—":String(v)}
+function formatDate(v){if(!v)return "Data não informada";const d=new Date(v);return isNaN(d)?v:d.toLocaleString("pt-BR")}
 function render(){
- const q=(document.getElementById('search').value||'').toLowerCase();
- const filtered=rows.filter(r=>JSON.stringify(r).toLowerCase().includes(q));
- document.getElementById('stats').innerHTML='<span class="pill">'+rows.length+' briefing(s)</span><span class="pill">'+filtered.length+' exibido(s)</span>';
- const list=document.getElementById('list');
- if(!filtered.length){list.innerHTML='<div class="empty">Nenhum briefing encontrado.</div>';return}
- list.innerHTML=filtered.map(r=>{
-  const respostas=r.respostas&&typeof r.respostas==='object'?r.respostas:{};
-  return '<article class="item"><div class="item-head"><div><h3>'+escapeHtml(text(r.nome_corretor))+'</h3><div class="meta">'+escapeHtml(text(r.tipo_imovel))+' • '+escapeHtml(text(r.cidade))+' • '+escapeHtml(text(r.creci))+'<br>WhatsApp: '+escapeHtml(text(r.whatsapp))+'<br>Recebido: '+escapeHtml(formatDate(r.created_at))+'</div></div><span class="pill">#'+escapeHtml(text(r.id))+'</span></div><div class="actions"><button class="primary" onclick="edit('+Number(r.id)+')">Editar</button><button class="danger" onclick="removeRow('+Number(r.id)+')">Excluir</button><button class="light" onclick="details('+Number(r.id)+')">Ver detalhes</button></div></article>'
- }).join('');
+  const q=(document.getElementById("search").value||"").toLowerCase();
+  const filtered=rows.filter(r=>JSON.stringify(r).toLowerCase().includes(q));
+  document.getElementById("stats").innerHTML='<span class="pill">'+rows.length+' briefing(s)</span><span class="pill">'+filtered.length+' exibido(s)</span>';
+  const list=document.getElementById("list");
+  if(!filtered.length){list.innerHTML='<div class="empty">Nenhum briefing encontrado.</div>';return}
+  list.innerHTML=filtered.map(r=>{
+    return '<article class="item"><div class="item-head"><div><h3>'+escapeHtml(text(r.nome_corretor))+'</h3><div class="meta">'+escapeHtml(text(r.tipo_imovel))+" • "+escapeHtml(text(r.cidade))+" • "+escapeHtml(text(r.creci))+'<br>WhatsApp: '+escapeHtml(text(r.whatsapp))+'<br>Recebido: '+escapeHtml(formatDate(r.created_at))+'</div></div><span class="pill">#'+escapeHtml(text(r.id))+'</span></div><div class="actions"><button class="primary" onclick="edit('+Number(r.id)+')">Editar</button><button class="danger" onclick="removeRow('+Number(r.id)+')">Excluir</button><button class="light" onclick="details('+Number(r.id)+')">Ver detalhes</button></div></article>'
+  }).join("");
 }
-function escapeHtml(v){return String(v).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
+window.render=render;
+function escapeHtml(v){return String(v).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
 function findRow(id){return rows.find(r=>Number(r.id)===Number(id))}
-function edit(id){const r=findRow(id);if(!r)return;editingId=id;document.getElementById('e_nome').value=r.nome_corretor||'';document.getElementById('e_whatsapp').value=r.whatsapp||'';document.getElementById('e_creci').value=r.creci||'';document.getElementById('e_tipo').value=r.tipo_imovel||'';document.getElementById('e_endereco').value=r.endereco||'';document.getElementById('e_bairro').value=r.bairro||'';document.getElementById('e_cidade').value=r.cidade||'';document.getElementById('e_valor').value=r.valor_venda??'';document.getElementById('e_respostas').value=JSON.stringify(r.respostas||{},null,2);document.getElementById('editError').style.display='none';document.getElementById('modal').classList.add('show')}
-function closeModal(){document.getElementById('modal').classList.remove('show');editingId=null}
+function edit(id){
+  const r=findRow(id);if(!r)return;editingId=id;
+  document.getElementById("e_nome").value=r.nome_corretor||"";
+  document.getElementById("e_whatsapp").value=r.whatsapp||"";
+  document.getElementById("e_creci").value=r.creci||"";
+  document.getElementById("e_tipo").value=r.tipo_imovel||"";
+  document.getElementById("e_endereco").value=r.endereco||"";
+  document.getElementById("e_bairro").value=r.bairro||"";
+  document.getElementById("e_cidade").value=r.cidade||"";
+  document.getElementById("e_valor").value=r.valor_venda??"";
+  document.getElementById("e_respostas").value=JSON.stringify(r.respostas||{},null,2);
+  document.getElementById("editError").style.display="none";
+  document.getElementById("modal").classList.add("show");
+}
+window.edit=edit;
+function closeModal(){document.getElementById("modal").classList.remove("show");editingId=null}
+window.closeModal=closeModal;
+
 async function saveEdit(){
- const r=findRow(editingId);if(!r)return;
- let respostas;try{respostas=JSON.parse(document.getElementById('e_respostas').value||'{}')}catch(e){const x=document.getElementById('editError');x.textContent='O JSON das respostas não é válido.';x.style.display='block';return}
- const body={nome_corretor:document.getElementById('e_nome').value.trim(),whatsapp:document.getElementById('e_whatsapp').value.trim(),creci:document.getElementById('e_creci').value.trim()||null,tipo_imovel:document.getElementById('e_tipo').value.trim(),endereco:document.getElementById('e_endereco').value.trim(),bairro:document.getElementById('e_bairro').value.trim(),cidade:document.getElementById('e_cidade').value.trim(),valor_venda:document.getElementById('e_valor').value?parseInt(document.getElementById('e_valor').value.replace(/\D/g,''),10):null,respostas};
- try{const resp=await fetch(API+'?id=eq.'+encodeURIComponent(editingId),{method:'PATCH',headers:{'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify(body)});if(!resp.ok)throw new Error('HTTP '+resp.status);closeModal();showMsg('Alterações salvas com sucesso.');await load()}catch(e){const x=document.getElementById('editError');x.textContent='Não foi possível salvar. Código: '+e.message;x.style.display='block'}}
-async function removeRow(id){const r=findRow(id);if(!r)return;if(!confirm('Excluir definitivamente o briefing de '+(r.nome_corretor||'este corretor')+'?'))return;try{const resp=await fetch(API+'?id=eq.'+encodeURIComponent(id),{method:'DELETE',headers:{'Prefer':'return=minimal'}});if(!resp.ok)throw new Error('HTTP '+resp.status);showMsg('Briefing excluído.');await load()}catch(e){showMsg('Não foi possível excluir: '+e.message,true)}}
-function details(id){const r=findRow(id);if(!r)return;alert(JSON.stringify(r,null,2))}
-function showMsg(s,error=false){document.getElementById('message').innerHTML='<div class="'+(error?'error':'notice')+'">'+escapeHtml(s)+'</div>';setTimeout(()=>document.getElementById('message').innerHTML='',4000)}
-function exportCSV(){if(!rows.length)return;const cols=['id','created_at','nome_corretor','whatsapp','creci','tipo_imovel','endereco','bairro','cidade','valor_venda'];const csv=[cols.join(';'),...rows.map(r=>cols.map(c=>'"'+String(r[c]??'').replace(/"/g,'""')+'"').join(';'))].join('\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\\ufeff'+csv],{type:'text/csv;charset=utf-8'}));a.download='briefings-drone-vixx.csv';a.click();URL.revokeObjectURL(a.href)}
+  const r=findRow(editingId);if(!r)return;
+  let respostas;
+  try{respostas=JSON.parse(document.getElementById("e_respostas").value||"{}")}
+  catch(e){const x=document.getElementById("editError");x.textContent="O JSON das respostas não é válido.";x.style.display="block";return}
+  const body={
+    nome_corretor:document.getElementById("e_nome").value.trim(),
+    whatsapp:document.getElementById("e_whatsapp").value.trim(),
+    creci:document.getElementById("e_creci").value.trim()||null,
+    tipo_imovel:document.getElementById("e_tipo").value.trim(),
+    endereco:document.getElementById("e_endereco").value.trim(),
+    bairro:document.getElementById("e_bairro").value.trim()||null,
+    cidade:document.getElementById("e_cidade").value.trim(),
+    valor_venda:document.getElementById("e_valor").value?parseInt(document.getElementById("e_valor").value.replace(/\D/g,""),10):null,
+    respostas
+  };
+  try{
+    const {error}=await neon.from("briefings_corretor").update(body).eq("id",editingId);
+    if(error)throw new Error(error.message||"Erro ao salvar");
+    closeModal();showMsg("Alterações salvas com sucesso.");await load();
+  }catch(e){const x=document.getElementById("editError");x.textContent="Não foi possível salvar. Código: "+e.message;x.style.display="block"}
+}
+window.saveEdit=saveEdit;
+
+async function removeRow(id){
+  const r=findRow(id);if(!r)return;
+  if(!confirm("Excluir definitivamente o briefing de "+(r.nome_corretor||"este corretor")+"?"))return;
+  try{
+    const {error}=await neon.from("briefings_corretor").delete().eq("id",id);
+    if(error)throw new Error(error.message||"Erro ao excluir");
+    showMsg("Briefing excluído.");await load();
+  }catch(e){showMsg("Não foi possível excluir: "+e.message,true)}
+}
+window.removeRow=removeRow;
+
+function details(id){const r=findRow(id);if(r)alert(JSON.stringify(r,null,2))}
+window.details=details;
+function showMsg(s,error=false){document.getElementById("message").innerHTML='<div class="'+(error?"error":"notice")+'">'+escapeHtml(s)+"</div>";setTimeout(()=>document.getElementById("message").innerHTML="",4000)}
+function exportCSV(){
+  if(!rows.length)return;
+  const cols=["id","created_at","nome_corretor","whatsapp","creci","tipo_imovel","endereco","bairro","cidade","valor_venda"];
+  const csv=[cols.join(";"),...rows.map(r=>cols.map(c=>'"'+String(r[c]??"").replace(/"/g,'""')+'"').join(";"))].join("\n");
+  const a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["\ufeff"+csv],{type:"text/csv;charset=utf-8"}));a.download="briefings-drone-vixx.csv";a.click();URL.revokeObjectURL(a.href);
+}
+window.exportCSV=exportCSV;
+boot();
 </script>
 </body>
 </html>
