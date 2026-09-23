@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#142b55">
+<title>Drone VIXX | Autenticação administrativa</title>
+<style>
+:root{--blue:#142b55;--blue2:#1d3d75;--pink:#d889a5;--pink2:#f7e7ed;--text:#172033;--muted:#687386;--line:#dce3ec;--danger:#b42318}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(circle at 10% 0,#f9eaf0 0,transparent 30%),linear-gradient(135deg,#f4f7fb,#fff);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;color:var(--text)}
+.container{width:min(470px,100%);margin:auto;padding:20px 14px}.top{display:flex;justify-content:flex-end;margin-bottom:25px}.public{background:#fff;border:1px solid var(--line);color:var(--blue);padding:9px 12px;border-radius:10px;text-decoration:none;font-size:12px;font-weight:750}
+.card{background:#fff;border:1px solid rgba(220,227,236,.9);border-radius:22px;padding:26px 21px;box-shadow:0 18px 45px rgba(20,43,85,.1)}.brand{text-align:center}.brand img{max-width:180px;max-height:75px;object-fit:contain}.fallback{display:none;font-size:25px;font-weight:850;color:var(--blue)}
+h1{text-align:center;color:var(--blue);font-size:24px;margin:20px 0 6px}.sub{text-align:center;color:var(--muted);font-size:14px;line-height:1.5;margin:0 0 23px}
+label{display:block;font-size:13px;font-weight:750;margin-bottom:7px}input{width:100%;padding:14px 12px;border:1px solid var(--line);border-radius:12px;font-size:16px;outline:none}input:focus{border-color:var(--pink);box-shadow:0 0 0 3px rgba(216,137,165,.14)}
+button{width:100%;border:0;border-radius:12px;padding:14px;margin-top:14px;background:linear-gradient(135deg,var(--blue),var(--blue2));color:#fff;font-size:16px;font-weight:800;cursor:pointer}button:disabled{opacity:.55}.error{display:none;margin-top:13px;padding:11px;border-radius:10px;background:#fff0ee;border:1px solid #f1c9c2;color:var(--danger);font-size:13px}.note{text-align:center;color:var(--muted);font-size:11px;margin-top:16px}
+</style>
+</head>
+<body>
+<div class="container">
+<div class="top"><a class="public" href="index.html">← Voltar para o briefing</a></div>
+<div class="card">
+<div class="brand"><img src="logo.jpg" alt="Drone VIXX" onerror="this.style.display='none';document.querySelector('.fallback').style.display='block'"><div class="fallback">DRONE VIXX</div></div>
+<h1>Acesso administrativo</h1>
+<p class="sub">Esta área é exclusiva para administração dos briefings recebidos pelos corretores.</p>
+<label for="password">Senha administrativa</label>
+<input id="password" type="password" autocomplete="current-password" placeholder="Digite sua senha">
+<button id="enter" onclick="login()">Entrar na área administrativa</button>
+<div id="error" class="error">Senha incorreta. Tente novamente.</div>
+<p class="note">A autenticação acontece em uma página separada e não é apresentada no formulário enviado aos corretores.</p>
+</div></div>
+<script>
+const PASSWORD_HASH='b275c12438c3eb118b307ed62dd17aaa163ff15f56a622b090e2a1d91320a634';
+async function sha256(text){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(text));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')}
+async function login(){const btn=document.getElementById('enter'),err=document.getElementById('error');btn.disabled=true;const h=await sha256(document.getElementById('password').value);if(h!==PASSWORD_HASH){err.style.display='block';btn.disabled=false;return}sessionStorage.setItem('vixx_admin','1');location.href='admin.html'}
+document.getElementById('password').addEventListener('keydown',e=>{if(e.key==='Enter')login()});
+if(sessionStorage.getItem('vixx_admin')==='1')location.replace('admin.html');
+</script>
+</body></html>
