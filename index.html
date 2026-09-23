@@ -6,7 +6,7 @@
 <style>
 :root{--blue:#142b55;--blue2:#1d3d75;--pink:#d889a5;--pink2:#f7e7ed;--bg:#f4f7fb;--text:#172033;--muted:#687386;--line:#dce3ec;--white:#fff;--green:#15815a}
 *{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 10% 0,#f9eaf0 0,transparent 28%),linear-gradient(135deg,#f4f7fb,#fff);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;color:var(--text)}
-.container{width:min(700px,100%);margin:auto;padding:18px 14px 42px}header{text-align:center;padding:8px 0 14px}.logo{max-width:185px;max-height:76px;object-fit:contain}.logo-fallback{display:none;font-size:25px;font-weight:850;color:var(--blue)}
+.container{width:min(700px,100%);margin:auto;padding:18px 14px 42px}.topbar{display:flex;justify-content:flex-end;margin-bottom:4px}.admin-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border-radius:10px;background:var(--blue);color:#fff;text-decoration:none;font-size:12px;font-weight:750;box-shadow:0 5px 14px rgba(20,43,85,.14)}.admin-btn:hover{background:var(--blue2)}header{text-align:center;padding:8px 0 14px}.logo{max-width:185px;max-height:76px;object-fit:contain}.logo-fallback{display:none;font-size:25px;font-weight:850;color:var(--blue)}
 .badge{display:inline-flex;align-items:center;gap:6px;background:#fff;border:1px solid #ead6de;color:#8d4c67;padding:6px 10px;border-radius:999px;font-size:11px;font-weight:750;margin-top:10px}
 h1{font-size:24px;margin:12px 0 5px;color:var(--blue)}.subtitle{margin:0;color:var(--muted);font-size:14px;line-height:1.5}
 .progress-wrap{margin:14px 0 20px}.progress-top{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:6px}.progress{height:7px;background:#e8edf3;border-radius:20px;overflow:hidden}.progress-bar{height:100%;width:20%;background:linear-gradient(90deg,var(--blue),var(--pink));transition:width .25s}
@@ -20,7 +20,7 @@ input,select,textarea{width:100%;border:1px solid var(--line);border-radius:12px
 @media(max-width:480px){.container{padding:13px 11px 28px}.card{padding:20px 15px}.grid,.options{grid-template-columns:1fr}.actions{position:sticky;bottom:7px;background:linear-gradient(transparent,#fff 25%);padding-top:12px}}
 </style></head>
 <body><div class="container">
-<header><img class="logo" src="logo.jpg" alt="Drone VIXX" onerror="this.style.display='none';document.querySelector('.logo-fallback').style.display='block'"><div class="logo-fallback">DRONE VIXX</div>
+<header><div class="topbar"><a class="admin-btn" href="auth.html">⚙ Admin</a></div><img class="logo" src="logo.jpg" alt="Drone VIXX" onerror="this.style.display='none';document.querySelector('.logo-fallback').style.display='block'"><div class="logo-fallback">DRONE VIXX</div>
 <div class="badge">● Briefing online • leva cerca de 2 minutos</div><h1>Briefing pré-visita técnica</h1><p class="subtitle">Preencha antes de marcarmos a visita. Suas informações serão gravadas com segurança para o planejamento da produção.</p></header>
 <div class="progress-wrap"><div class="progress-top"><span id="progressText">Etapa 1 de 5</span><span id="progressPct">20%</span></div><div class="progress"><div class="progress-bar" id="progress"></div></div></div>
 <div class="card"><form id="form">
@@ -54,7 +54,7 @@ input,select,textarea{width:100%;border:1px solid var(--line);border-radius:12px
 <div class="error" id="error"></div></section>
 </form>
 <div class="success" id="success"><div class="icon">✓</div><h2>Briefing recebido!</h2><p>Obrigado. As informações foram gravadas com sucesso. A Drone VIXX já pode utilizá-las no planejamento da visita e da produção do vídeo.</p></div>
-</div><p class="small-note">Drone VIXX • Filmagem aérea e produção de vídeos</p><div class="admin-link"><a href="admin.html">Área administrativa</a></div>
+</div><p class="small-note">Drone VIXX • Filmagem aérea e produção de vídeos</p>
 </div>
 <script>
 const API='https://ep-falling-frost-ac6kshzo.apirest.sa-east-1.aws.neon.tech/corretores/rest/v1/briefings_corretor';
