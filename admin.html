@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#142b55">
+<title>Drone VIXX | Área administrativa</title>
+<style>
+:root{--blue:#142b55;--blue2:#1d3d75;--pink:#d889a5;--pink2:#f7e7ed;--bg:#f4f7fb;--text:#172033;--muted:#687386;--line:#dde4ee;--white:#fff;--danger:#b42318;--green:#16835b}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(135deg,#f4f7fb,#fff);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;color:var(--text)}
+.container{width:min(1100px,100%);margin:auto;padding:22px 16px 50px}.top{display:flex;align-items:center;justify-content:space-between;gap:15px;margin-bottom:20px}.brand{display:flex;align-items:center;gap:12px}.brand img{max-width:135px;max-height:52px;object-fit:contain}.brand strong{display:block;color:var(--blue)}.brand span{font-size:12px;color:var(--muted)}
+.card{background:#fff;border:1px solid var(--line);border-radius:20px;padding:22px;box-shadow:0 12px 35px rgba(20,43,85,.07);margin-bottom:18px}
+h1{margin:0;color:var(--blue);font-size:25px}.sub{color:var(--muted);margin:6px 0 0;font-size:14px}
+.login{max-width:430px;margin:55px auto}.login h1{text-align:center}.login .sub{text-align:center;margin-bottom:22px}
+label{display:block;font-size:13px;font-weight:700;margin:0 0 7px}input,textarea{width:100%;padding:12px;border:1px solid var(--line);border-radius:11px;font:inherit;color:var(--text);outline:none}input:focus,textarea:focus{border-color:var(--pink);box-shadow:0 0 0 3px rgba(216,137,165,.14)}textarea{min-height:100px;resize:vertical}
+button{border:0;border-radius:11px;padding:12px 16px;font:inherit;font-weight:750;cursor:pointer}.primary{background:var(--blue);color:#fff}.pink{background:var(--pink);color:#fff}.light{background:#eef2f7;color:var(--blue)}.danger{background:#fff0ee;color:var(--danger)}button:disabled{opacity:.55;cursor:not-allowed}
+.toolbar{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center}.stats{display:flex;gap:9px;flex-wrap:wrap;margin-top:14px}.pill{background:#eef3fa;color:var(--blue);border-radius:999px;padding:7px 11px;font-size:12px;font-weight:700}
+.list{display:grid;gap:12px;margin-top:18px}.item{border:1px solid var(--line);border-radius:16px;padding:17px;background:#fff}.item-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.item h3{margin:0 0 4px;color:var(--blue);font-size:17px}.meta{font-size:12px;color:var(--muted);line-height:1.5}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.actions button{font-size:13px;padding:9px 12px}
+.empty{text-align:center;color:var(--muted);padding:35px 10px}.error,.notice{padding:12px;border-radius:11px;font-size:13px;margin-top:12px}.error{background:#fff0ee;border:1px solid #f1c4bd;color:var(--danger)}.notice{background:#edf9f3;border:1px solid #bde4d2;color:#116a4b}
+.modal{position:fixed;inset:0;background:rgba(8,20,40,.5);display:none;align-items:center;justify-content:center;padding:15px;z-index:20}.modal.show{display:flex}.modal-box{background:#fff;border-radius:20px;width:min(760px,100%);max-height:90vh;overflow:auto;padding:20px}.modal-head{display:flex;justify-content:space-between;align-items:center;gap:12px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.field{margin-top:13px}.full{grid-column:1/-1}.json{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;min-height:220px}
+.small{font-size:11px;color:var(--muted);margin-top:12px;text-align:center}
+@media(max-width:650px){.toolbar{grid-template-columns:1fr}.grid{grid-template-columns:1fr}.full{grid-column:auto}.top{align-items:flex-start}.top button{white-space:nowrap}}
+</style>
+</head>
+<body>
+<div class="container">
+  <div id="loginView" class="card login">
+    <h1>Área administrativa</h1><p class="sub">Drone VIXX • Briefings de corretores</p>
+    <div class="field"><label>Senha</label><input id="password" type="password" autocomplete="current-password" placeholder="Digite a senha"></div>
+    <button class="primary" style="width:100%;margin-top:14px" onclick="login()">Entrar</button>
+    <div id="loginError" class="error" style="display:none">Senha incorreta.</div>
+    <p class="small">Acesso destinado à administração dos briefings.</p>
+  </div>
+
+  <main id="adminView" style="display:none">
+    <div class="top">
+      <div class="brand">
+        <img src="logo.jpg" alt="Drone VIXX" onerror="this.style.display='none'">
+        <div><strong>Área administrativa</strong><span>Briefings recebidos</span></div>
+      </div>
+      <button class="light" onclick="logout()">Sair</button>
+    </div>
+    <div class="card">
+      <h1>Briefings</h1><p class="sub">Consulte, pesquise, edite ou exclua os dados gravados no Neon.</p>
+      <div class="toolbar" style="margin-top:18px"><input id="search" placeholder="Pesquisar por nome, cidade, CRECI ou endereço" oninput="render()"><button class="primary" onclick="load()">Atualizar</button><button class="pink" onclick="exportCSV()">Exportar CSV</button></div>
+      <div id="stats" class="stats"></div>
+      <div id="message"></div>
+      <div id="list" class="list"><div class="empty">Carregando...</div></div>
+    </div>
+  </main>
+</div>
+
+<div id="modal" class="modal">
+ <div class="modal-box">
+  <div class="modal-head"><div><h2 style="margin:0;color:var(--blue)">Editar briefing</h2><p class="sub">Altere os dados principais e, se necessário, o conteúdo completo das respostas.</p></div><button class="light" onclick="closeModal()">Fechar</button></div>
+  <div class="grid" style="margin-top:12px">
+   <div class="field"><label>Nome do corretor</label><input id="e_nome"></div><div class="field"><label>WhatsApp</label><input id="e_whatsapp"></div>
+   <div class="field"><label>CRECI</label><input id="e_creci"></div><div class="field"><label>Tipo de imóvel</label><input id="e_tipo"></div>
+   <div class="field"><label>Endereço</label><input id="e_endereco"></div><div class="field"><label>Bairro</label><input id="e_bairro"></div>
+   <div class="field"><label>Cidade</label><input id="e_cidade"></div><div class="field"><label>Valor de venda</label><input id="e_valor" inputmode="numeric"></div>
+   <div class="field full"><label>Respostas completas (JSON)</label><textarea id="e_respostas" class="json"></textarea></div>
+  </div>
+  <div id="editError" class="error" style="display:none"></div>
+  <div class="actions" style="justify-content:flex-end"><button class="light" onclick="closeModal()">Cancelar</button><button class="primary" onclick="saveEdit()">Salvar alterações</button></div>
+ </div>
+</div>
+
+<script>
+const API='https://ep-falling-frost-ac6kshzo.apirest.sa-east-1.aws.neon.tech/corretores/rest/v1/briefings_corretor';
+const PASSWORD_HASH='b275c12438c3eb118b307ed62dd17aaa163ff15f56a622b090e2a1d91320a634';
+let rows=[],editingId=null;
+
+async function sha256(text){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(text));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')}
+async function login(){const p=document.getElementById('password').value;const h=await sha256(p);if(h!==PASSWORD_HASH){document.getElementById('loginError').style.display='block';return}sessionStorage.setItem('vixx_admin','1');showAdmin();load()}
+function showAdmin(){document.getElementById('loginView').style.display='none';document.getElementById('adminView').style.display='block'}
+function logout(){sessionStorage.removeItem('vixx_admin');location.reload()}
+document.getElementById('password').addEventListener('keydown',e=>{if(e.key==='Enter')login()});
+if(sessionStorage.getItem('vixx_admin')==='1')showAdmin();
+
+async function load(){
+ const list=document.getElementById('list');list.innerHTML='<div class="empty">Carregando briefings...</div>';document.getElementById('message').innerHTML='';
+ try{
+  const r=await fetch(API+'?select=*&order=id.desc',{headers:{'Accept':'application/json'}});
+  if(!r.ok)throw new Error('HTTP '+r.status);
+  rows=await r.json();render();
+ }catch(e){list.innerHTML='<div class="error">Não foi possível consultar os briefings no Neon. Verifique as permissões da API. Código: '+e.message+'</div>'}
+}
+function text(v){return v===null||v===undefined||v===''?'—':String(v)}
+function formatDate(v){if(!v)return 'Data não informada';const d=new Date(v);return isNaN(d)?v:d.toLocaleString('pt-BR')}
+function render(){
+ const q=(document.getElementById('search').value||'').toLowerCase();
+ const filtered=rows.filter(r=>JSON.stringify(r).toLowerCase().includes(q));
+ document.getElementById('stats').innerHTML='<span class="pill">'+rows.length+' briefing(s)</span><span class="pill">'+filtered.length+' exibido(s)</span>';
+ const list=document.getElementById('list');
+ if(!filtered.length){list.innerHTML='<div class="empty">Nenhum briefing encontrado.</div>';return}
+ list.innerHTML=filtered.map(r=>{
+  const respostas=r.respostas&&typeof r.respostas==='object'?r.respostas:{};
+  return '<article class="item"><div class="item-head"><div><h3>'+escapeHtml(text(r.nome_corretor))+'</h3><div class="meta">'+escapeHtml(text(r.tipo_imovel))+' • '+escapeHtml(text(r.cidade))+' • '+escapeHtml(text(r.creci))+'<br>WhatsApp: '+escapeHtml(text(r.whatsapp))+'<br>Recebido: '+escapeHtml(formatDate(r.created_at))+'</div></div><span class="pill">#'+escapeHtml(text(r.id))+'</span></div><div class="actions"><button class="primary" onclick="edit('+Number(r.id)+')">Editar</button><button class="danger" onclick="removeRow('+Number(r.id)+')">Excluir</button><button class="light" onclick="details('+Number(r.id)+')">Ver detalhes</button></div></article>'
+ }).join('');
+}
+function escapeHtml(v){return String(v).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
+function findRow(id){return rows.find(r=>Number(r.id)===Number(id))}
+function edit(id){const r=findRow(id);if(!r)return;editingId=id;document.getElementById('e_nome').value=r.nome_corretor||'';document.getElementById('e_whatsapp').value=r.whatsapp||'';document.getElementById('e_creci').value=r.creci||'';document.getElementById('e_tipo').value=r.tipo_imovel||'';document.getElementById('e_endereco').value=r.endereco||'';document.getElementById('e_bairro').value=r.bairro||'';document.getElementById('e_cidade').value=r.cidade||'';document.getElementById('e_valor').value=r.valor_venda??'';document.getElementById('e_respostas').value=JSON.stringify(r.respostas||{},null,2);document.getElementById('editError').style.display='none';document.getElementById('modal').classList.add('show')}
+function closeModal(){document.getElementById('modal').classList.remove('show');editingId=null}
+async function saveEdit(){
+ const r=findRow(editingId);if(!r)return;
+ let respostas;try{respostas=JSON.parse(document.getElementById('e_respostas').value||'{}')}catch(e){const x=document.getElementById('editError');x.textContent='O JSON das respostas não é válido.';x.style.display='block';return}
+ const body={nome_corretor:document.getElementById('e_nome').value.trim(),whatsapp:document.getElementById('e_whatsapp').value.trim(),creci:document.getElementById('e_creci').value.trim()||null,tipo_imovel:document.getElementById('e_tipo').value.trim(),endereco:document.getElementById('e_endereco').value.trim(),bairro:document.getElementById('e_bairro').value.trim(),cidade:document.getElementById('e_cidade').value.trim(),valor_venda:document.getElementById('e_valor').value?parseInt(document.getElementById('e_valor').value.replace(/\D/g,''),10):null,respostas};
+ try{const resp=await fetch(API+'?id=eq.'+encodeURIComponent(editingId),{method:'PATCH',headers:{'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify(body)});if(!resp.ok)throw new Error('HTTP '+resp.status);closeModal();showMsg('Alterações salvas com sucesso.');await load()}catch(e){const x=document.getElementById('editError');x.textContent='Não foi possível salvar. Código: '+e.message;x.style.display='block'}}
+async function removeRow(id){const r=findRow(id);if(!r)return;if(!confirm('Excluir definitivamente o briefing de '+(r.nome_corretor||'este corretor')+'?'))return;try{const resp=await fetch(API+'?id=eq.'+encodeURIComponent(id),{method:'DELETE',headers:{'Prefer':'return=minimal'}});if(!resp.ok)throw new Error('HTTP '+resp.status);showMsg('Briefing excluído.');await load()}catch(e){showMsg('Não foi possível excluir: '+e.message,true)}}
+function details(id){const r=findRow(id);if(!r)return;alert(JSON.stringify(r,null,2))}
+function showMsg(s,error=false){document.getElementById('message').innerHTML='<div class="'+(error?'error':'notice')+'">'+escapeHtml(s)+'</div>';setTimeout(()=>document.getElementById('message').innerHTML='',4000)}
+function exportCSV(){if(!rows.length)return;const cols=['id','created_at','nome_corretor','whatsapp','creci','tipo_imovel','endereco','bairro','cidade','valor_venda'];const csv=[cols.join(';'),...rows.map(r=>cols.map(c=>'"'+String(r[c]??'').replace(/"/g,'""')+'"').join(';'))].join('\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\\ufeff'+csv],{type:'text/csv;charset=utf-8'}));a.download='briefings-drone-vixx.csv';a.click();URL.revokeObjectURL(a.href)}
+</script>
+</body>
+</html>
