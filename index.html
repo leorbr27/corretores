@@ -56,21 +56,98 @@ input,select,textarea{width:100%;border:1px solid var(--line);border-radius:12px
 <div class="success" id="success"><div class="icon">✓</div><h2>Briefing recebido!</h2><p>Obrigado. As informações foram gravadas com sucesso. A Drone VIXX já pode utilizá-las no planejamento da visita e da produção do vídeo.</p></div>
 </div><p class="small-note">Drone VIXX • Filmagem aérea e produção de vídeos</p>
 </div>
-<script>
-const API='https://ep-falling-frost-ac6kshzo.apirest.sa-east-1.aws.neon.tech/corretores/rest/v1/briefings_corretor';
-let current=0;const steps=[...document.querySelectorAll('.step')];
-function update(){steps.forEach((s,i)=>s.classList.toggle('active',i===current));const pct=Math.round((current+1)/steps.length*100);document.getElementById('progress').style.width=pct+'%';document.getElementById('progressText').textContent='Etapa '+(current+1)+' de '+steps.length;document.getElementById('progressPct').textContent=pct+'%';window.scrollTo({top:0,behavior:'smooth'})}
-function validateStep(){for(const f of steps[current].querySelectorAll('input[required],select[required],textarea[required]')){if(!f.checkValidity()){f.reportValidity();return false}}return true}
+<script type="module">
+import { neon } from "./neon-client.js";
+
+let current=0;
+const steps=[...document.querySelectorAll(".step")];
+
+function update(){
+  steps.forEach((s,i)=>s.classList.toggle("active",i===current));
+  const pct=Math.round((current+1)/steps.length*100);
+  document.getElementById("progress").style.width=pct+"%";
+  document.getElementById("progressText").textContent="Etapa "+(current+1)+" de "+steps.length;
+  document.getElementById("progressPct").textContent=pct+"%";
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+function validateStep(){
+  for(const f of steps[current].querySelectorAll("input[required],select[required],textarea[required]")){
+    if(!f.checkValidity()){f.reportValidity();return false}
+  }
+  return true;
+}
 function nextStep(){if(validateStep()&&current<steps.length-1){current++;update()}}
 function prevStep(){if(current>0){current--;update()}}
-function checked(prefix){return [...document.querySelectorAll('input[id^="'+prefix+'"]')].filter(i=>i.checked).map(i=>i.value)}
-document.getElementById('whatsapp').addEventListener('input',e=>{let v=e.target.value.replace(/\D/g,'').slice(0,11);if(v.length>10)v=v.replace(/(\d{2})(\d{5})(\d{4})/,'($1) $2-$3');else if(v.length>6)v=v.replace(/(\d{2})(\d{4})(\d{0,4})/,'($1) $2-$3');else if(v.length>2)v=v.replace(/(\d{2})(\d{0,5})/,'($1) $2');e.target.value=v});
-document.getElementById('valor').addEventListener('input',e=>{let n=e.target.value.replace(/\D/g,'');if(!n){e.target.value='';return}n=String(parseInt(n,10));e.target.value='R$ '+n.replace(/\B(?=(\d{3})+(?!\d))/g,'.')});
-document.getElementById('form').addEventListener('submit',async e=>{
- e.preventDefault();const btn=document.getElementById('submit'),err=document.getElementById('error');err.style.display='none';btn.disabled=true;btn.textContent='GRAVANDO...';
- const respostas={nome_corretor:document.getElementById('nome').value.trim(),whatsapp:document.getElementById('whatsapp').value.trim(),creci:document.getElementById('creci').value.trim()||null,tipo_imovel:document.getElementById('tipo').value,endereco:document.getElementById('endereco').value.trim(),bairro:document.getElementById('bairro').value.trim()||null,cidade:document.getElementById('cidade').value.trim(),valor_venda_formatado:document.getElementById('valor').value.trim()||null,area:document.getElementById('area').value.trim()||null,quartos:document.getElementById('quartos').value.trim()||null,suites:document.getElementById('suites').value.trim()||null,banheiros:document.getElementById('banheiros').value.trim()||null,vagas:document.getElementById('vagas').value.trim()||null,diferenciais:document.getElementById('diferenciais').value.trim()||null,itens_mostrar:checked('show_'),referencia:document.getElementById('referencia').value.trim()||null,restricoes:document.getElementById('restricoes').value.trim()||null,objetivos_video:checked('obj_'),indispensavel:document.getElementById('indispensavel').value.trim()||null};
- const valorNumerico=document.getElementById('valor').value.replace(/\D/g,'');
- const payload={nome_corretor:respostas.nome_corretor,whatsapp:respostas.whatsapp,creci:respostas.creci,tipo_imovel:respostas.tipo_imovel,endereco:respostas.endereco,bairro:respostas.bairro,cidade:respostas.cidade,valor_venda:valorNumerico?parseInt(valorNumerico,10):null,respostas,user_agent:navigator.userAgent};
- try{const r=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify(payload)});if(!r.ok){const t=await r.text();throw new Error('HTTP '+r.status+' '+t)}document.getElementById('form').style.display='none';document.getElementById('progress-wrap')?.remove();document.querySelector('.progress-wrap').style.display='none';document.getElementById('success').style.display='block'}catch(ex){console.error(ex);err.textContent='Não foi possível gravar o briefing no banco de dados. Tente novamente. ('+ex.message+')';err.style.display='block';btn.disabled=false;btn.textContent='TENTAR NOVAMENTE'}}
+function checked(prefix){
+  return [...document.querySelectorAll('input[id^="'+prefix+'"]')].filter(i=>i.checked).map(i=>i.value)
+}
+document.getElementById("whatsapp").addEventListener("input",e=>{
+  let v=e.target.value.replace(/\D/g,"").slice(0,11);
+  if(v.length>10)v=v.replace(/(\d{2})(\d{5})(\d{4})/,"($1) $2-$3");
+  else if(v.length>6)v=v.replace(/(\d{2})(\d{4})(\d{0,4})/,"($1) $2-$3");
+  else if(v.length>2)v=v.replace(/(\d{2})(\d{0,5})/,"($1) $2");
+  e.target.value=v
+});
+document.getElementById("valor").addEventListener("input",e=>{
+  let n=e.target.value.replace(/\D/g,"");
+  if(!n){e.target.value="";return}
+  n=String(parseInt(n,10));
+  e.target.value="R$ "+n.replace(/\B(?=(\d{3})+(?!\d))/g,".")
+});
+
+document.getElementById("form").addEventListener("submit",async e=>{
+  e.preventDefault();
+  const btn=document.getElementById("submit"),err=document.getElementById("error");
+  err.style.display="none";btn.disabled=true;btn.textContent="GRAVANDO...";
+
+  const respostas={
+    nome_corretor:document.getElementById("nome").value.trim(),
+    whatsapp:document.getElementById("whatsapp").value.trim(),
+    creci:document.getElementById("creci").value.trim()||null,
+    tipo_imovel:document.getElementById("tipo").value,
+    endereco:document.getElementById("endereco").value.trim(),
+    bairro:document.getElementById("bairro").value.trim()||null,
+    cidade:document.getElementById("cidade").value.trim(),
+    valor_venda_formatado:document.getElementById("valor").value.trim()||null,
+    area:document.getElementById("area").value.trim()||null,
+    quartos:document.getElementById("quartos").value.trim()||null,
+    suites:document.getElementById("suites").value.trim()||null,
+    banheiros:document.getElementById("banheiros").value.trim()||null,
+    vagas:document.getElementById("vagas").value.trim()||null,
+    diferenciais:document.getElementById("diferenciais").value.trim()||null,
+    itens_mostrar:checked("show_"),
+    referencia:document.getElementById("referencia").value.trim()||null,
+    restricoes:document.getElementById("restricoes").value.trim()||null,
+    objetivos_video:checked("obj_"),
+    indispensavel:document.getElementById("indispensavel").value.trim()||null
+  };
+  const valorNumerico=document.getElementById("valor").value.replace(/\D/g,"");
+  const payload={
+    nome_corretor:respostas.nome_corretor,
+    whatsapp:respostas.whatsapp,
+    creci:respostas.creci,
+    tipo_imovel:respostas.tipo_imovel,
+    endereco:respostas.endereco,
+    bairro:respostas.bairro,
+    cidade:respostas.cidade,
+    valor_venda:valorNumerico?parseInt(valorNumerico,10):null,
+    respostas,
+    user_agent:navigator.userAgent
+  };
+
+  try{
+    const { error }=await neon.from("briefings_corretor").insert(payload);
+    if(error) throw new Error(error.message||"Erro ao gravar no Neon");
+    document.getElementById("form").style.display="none";
+    document.querySelector(".progress-wrap").style.display="none";
+    document.getElementById("success").style.display="block";
+  }catch(ex){
+    console.error(ex);
+    err.textContent="Não foi possível gravar o briefing no banco de dados. Tente novamente. ("+ex.message+")";
+    err.style.display="block";btn.disabled=false;btn.textContent="TENTAR NOVAMENTE";
+  }
+});
+window.nextStep=nextStep;
+window.prevStep=prevStep;
 update();
 </script></body></html>
