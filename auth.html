@@ -45,6 +45,7 @@ const switcher=document.createElement("div");
 switcher.style.cssText="display:flex;gap:8px;margin:0 0 18px";
 switcher.innerHTML='<button type="button" id="signInTab" style="margin:0;background:#142b55">Entrar</button><button type="button" id="signUpTab" style="margin:0;background:#eef2f7;color:#142b55">Primeiro acesso</button>';
 enter.parentElement.insertBefore(switcher,enter);
+enter.style.display="none";
 const signUpTab=document.getElementById("signUpTab");
 if(!signupEnabled()){
   signUpTab.style.display="none";
